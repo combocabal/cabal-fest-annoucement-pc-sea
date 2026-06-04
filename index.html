@@ -107,10 +107,32 @@ td:first-child{text-align:center;font-family:'JetBrains Mono',monospace;font-siz
   .event-tabs{flex-direction:column;}.event-tab{min-width:unset;}
   .toolbar{gap:6px;}.fgrp{width:100%;}.fbtn{flex:1;text-align:center;}
   .search-wrap{width:100%;margin-left:0;}.search-wrap input{width:100%;}
-  th:nth-child(5),td:nth-child(5),th:nth-child(2),td:nth-child(2){display:none;}
-  td,th{padding:10px 10px;font-size:13px;}
+  /* mobile: hide Name + AID, keep Username/Region/Redeem */
+  th:nth-child(2),td:nth-child(2),
+  th:nth-child(5),td:nth-child(5){display:none;}
+  td,th{padding:10px 8px;font-size:13px;}
+  .tbl-wrap{overflow-x:auto;}
+  .lnk{font-size:12px;padding:6px 10px;}
   .fb-btn{min-width:100%;flex:unset;}.fb-label{margin-bottom:10px;}
 }
+
+@media(max-width:600px){
+  .event-tabs{display:none;}
+  .ev-select-wrap{display:block;}
+}
+@media(min-width:601px){
+  .ev-select-wrap{display:none;}
+}
+.ev-select-wrap{margin-bottom:20px;}
+.ev-select{
+  width:100%;padding:14px 16px;border-radius:10px;border:none;
+  background:var(--surface2);color:var(--text);
+  font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.5px;
+  outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234ade80' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;padding-right:44px;
+}
+.ev-select option{background:var(--surface2);color:var(--text);}
 </style>
 </head>
 <body>
@@ -141,12 +163,15 @@ td:first-child{text-align:center;font-family:'JetBrains Mono',monospace;font-siz
     <div class="stat"><span class="stat-n">4</span><span class="stat-l">Events</span></div>
     <div class="stat"><span class="stat-n">1190</span><span class="stat-l">Total Winners</span></div>
     <div class="stat"><span class="stat-n">PC-SEA</span><span class="stat-l">Server</span></div>
-    <div class="stat"><span class="stat-n" id="s-cur">474</span><span class="stat-l" id="s-cur-lbl">Mystery Box</span></div>
   </div>
 </div>
 <div class="body">
   <div class="section-lbl">Select an event to view winners</div>
   <div class="event-tabs" id="tabs"></div>
+  <div class="ev-select-wrap">
+    <select class="ev-select" onchange="swSelect(this)" id="ev-select"></select>
+  </div>
+
   <div id="panels"></div>
   <div class="fb-strip">
     <span class="fb-label">Follow Us</span>
@@ -1368,6 +1393,16 @@ const DATA = [
 ]
 ];
 const state = EVENTS.map(()=>({filt:'ALL',q:''}));
+
+function swSelect(sel){
+  const idx = parseInt(sel.value);
+  document.querySelectorAll('.event-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.event-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.event-tab')[idx].classList.add('active');
+  document.getElementById('panel-'+idx).classList.add('active');
+  document.getElementById('s-cur').textContent=EVENTS[idx].count;
+  document.getElementById('s-cur-lbl').textContent=EVENTS[idx].label;
+}
 function buildUI(){
   document.getElementById('tabs').innerHTML = EVENTS.map((e,i)=>
     `<button class="event-tab${i===0?' active':''}" onclick="sw(${i},this)">
@@ -1397,6 +1432,9 @@ function buildUI(){
         <div id="nr-${i}" class="no-res" style="display:none">&#8212; No records found &#8212;</div>
       </div>
     </div>`).join('');
+  // populate mobile dropdown
+  const sel=document.getElementById('ev-select');
+  if(sel){EVENTS.forEach((e,i)=>{const o=document.createElement('option');o.value=i;o.textContent=e.label+' ('+e.count+' winners)';sel.appendChild(o);});}
   EVENTS.forEach((_,i)=>render(i));
 }
 function render(idx){
